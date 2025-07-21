@@ -11,6 +11,7 @@ export const Login = () => {
     const navigate = useNavigate();
     const [passwordVisible, setPasswordVisible] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
 
     const togglePasswordVisibility = () => {
@@ -58,6 +59,7 @@ export const Login = () => {
     const handleSubmit = async (event) => {
         event.preventDefault();
         setErrorMessage('');
+        setIsLoading(true);
 
         try {
             const response = await fetch('https://hr-back-2.onrender.com/signin', {
@@ -75,6 +77,7 @@ export const Login = () => {
             if (!response.ok) {
                 const message = data?.message || 'Invalid email or password';
                 setErrorMessage(message);
+                setIsLoading(false);
                 return;
             }
 
@@ -82,11 +85,13 @@ export const Login = () => {
             if (data.access_token) {
                 localStorage.setItem('token', data.access_token);
                 localStorage.setItem('refreshToken', data.refresh_token);
+
                 let decodedToken;
                 try {
                     decodedToken = jwtDecode(data.access_token);
                 } catch (error) {
                     console.error("Invalid token", error);
+                    setIsLoading(false);
                     return;
                 }
                 localStorage.setItem('role', decodedToken.sub.role);
@@ -105,6 +110,7 @@ export const Login = () => {
             console.error('Error:', error);
             setErrorMessage('Something went wrong. Please try again.');
         }
+        setIsLoading(false); 
     };
 
     return (
@@ -117,6 +123,12 @@ export const Login = () => {
                 {errorMessage && (
                     <div className="text-red-600 text-sm mt-2 text-center">{errorMessage}</div>
                 )}
+                 {isLoading && (
+                    <div className="text-secondary text-sm mt-2 text-center">"Signing in... "</div>
+                )}
+              
+                
+               
                 <form className='flex flex-col space-y-6' onSubmit={handleSubmit}>
                     <input
                         className='border p-2 rounded-[8px] outline-none text-Heading'
