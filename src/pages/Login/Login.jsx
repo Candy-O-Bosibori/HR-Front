@@ -10,6 +10,8 @@ export const Login = () => {
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
     const [passwordVisible, setPasswordVisible] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
+
 
     const togglePasswordVisibility = () => {
         setPasswordVisible(!passwordVisible);
@@ -55,6 +57,7 @@ export const Login = () => {
 
     const handleSubmit = async (event) => {
         event.preventDefault();
+        setErrorMessage('');
 
         try {
             const response = await fetch('https://hr-back-2.onrender.com/signin', {
@@ -67,12 +70,15 @@ export const Login = () => {
                     password: password
                 }),
             });
+            const data = await response.json();
 
             if (!response.ok) {
-                throw new Error('Error: ' + response.statusText);
+                const message = data?.message || 'Invalid email or password';
+                setErrorMessage(message);
+                return;
             }
 
-            const data = await response.json();
+            
             if (data.access_token) {
                 localStorage.setItem('token', data.access_token);
                 localStorage.setItem('refreshToken', data.refresh_token);
@@ -90,13 +96,14 @@ export const Login = () => {
                 } else if (decodedToken.sub.role === 'employee') {
                     navigate('/employee/dashboard');
                 } else {
-                    throw new Error('Invalid role');
+                    setErrorMessage('Invalid role');
                 }
             } else {
-                console.error('Access token is missing in the response');
+                setErrorMessage('Access token is missing in the response');
             }
         } catch (error) {
             console.error('Error:', error);
+            setErrorMessage('Something went wrong. Please try again.');
         }
     };
 
@@ -106,6 +113,10 @@ export const Login = () => {
                 <img className='self-center mb-4 w-24 md:w-32' src={logo} alt="Logo" />
                 <h1 className='text-center mb-4 font-body text-xl font-bold text-Heading'>Welcome Back!</h1>
                 <p className='text-center text-base text-Heading mb-4'>{'Let\'s Keep the Momentum Going'}</p>
+
+                {errorMessage && (
+                    <div className="text-red-600 text-sm mt-2 text-center">{errorMessage}</div>
+                )}
                 <form className='flex flex-col space-y-6' onSubmit={handleSubmit}>
                     <input
                         className='border p-2 rounded-[8px] outline-none text-Heading'
@@ -144,6 +155,10 @@ export const Login = () => {
                         Sign in
                     </button>
                 </form>
+                <div className='ml-2 pt-4 text-base text-Heading  text-sm'> Admin dashboard credentials: </div>
+                <div className='ml-2 text-base text-Heading mb-4 text-sm'> email: olivia@gmail.com  ||   password: olivia.123! </div>
+                <div className='ml-2 pt-4 text-base text-Heading text-sm'>Employees dashboard credentials:</div>
+                <div className='ml-2 text-base text-Heading text-sm'>email: liam@gmail.com || password: liam.123!</div>
             </div>
         </div>
     );
